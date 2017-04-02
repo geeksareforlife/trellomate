@@ -1,5 +1,12 @@
 {
     "require": {
-        "cdaguerre/php-trello-api": "^0.9.3"
+        "cdaguerre/php-trello-api": "^0.9.3",
+        "wp-cli/php-cli-tools": "^0.11.2",
+        "kherge/json": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+        	"GeeksAreForLife\\TrelloMate\\": "app/"
+        }
     }
 }
