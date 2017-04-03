@@ -4,8 +4,14 @@ use GeeksAreForLife\TrelloMate\Module;
 
 class Base extends Module
 {
-    public function __construct()
+
+    private $trello;
+    private $config;
+
+    public function __construct(&$trello, &$config)
     {
+        $this->trello = $trello;
+        $this->config = $config;
     }
 
     public function getCommands()
@@ -14,11 +20,6 @@ class Base extends Module
             'version'    => [
                 'short'        => 'Outputs the script version',
                 'long'         => 'Outputs the script version',
-                'module'       => 'Base',
-            ],
-            'help'        => [
-                'short'        => 'Display the help for a command',
-                'long'         => "Displays the help for a command.\n\nUsage:\nphp trellomate help <command>",
                 'module'       => 'Base',
             ],
         ];

@@ -5,4 +5,5 @@ require __DIR__ . '/vendor/autoload.php';
 use GeeksAreForLife\TrelloMate\TrelloMate;
 
 // hand off to the trellomate object
-new TrelloMate();
+$debug = true;
+new TrelloMate($debug);

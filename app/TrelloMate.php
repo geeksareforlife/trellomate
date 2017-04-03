@@ -2,8 +2,13 @@
 
 namespace GeeksAreForLife\TrelloMate;
 
+use cli\Colors;
+use Trello\Client;
+
 class TrelloMate
 {
+    private $debug = false;
+
     private $defaultConfig = __DIR__.'/defaultConfig.json';
     private $localConfig = __DIR__.'/config.json';
 
@@ -11,12 +16,55 @@ class TrelloMate
 
     private $moduleDir = __DIR__.'/modules';
 
-    private $commands = [];
+    private $commands = [
+    	'help'        => [
+                'short'        => 'Display the help for a command',
+                'long'         => "Displays the help for a command.\n\nUsage:\nphp trellomate help <command>",
+                'module'       => '',
+            ],
+    ];
 
-    public function __construct()
+    private $outputColors = [
+        'eol'       => '%n',
+        'info'      => '',
+        'warning'   => '%Y',
+        'error'     => '%R',
+        'debug'     => '%B',
+    ];
+
+    const MSG_INFO  = 0;
+    const MSG_WARN  = 1;
+    const MSG_ERR   = 2;
+    const MSG_DEBUG = 3;
+
+    public function __construct($debug = false)
     {
+        $this->debug = $debug;
+
         $this->loadConfig();
         $this->loadModules();
+
+        // are we actually setup?
+        $this->debug("Checking Setup");
+        if ($this->checkSetup()) {
+            // setup had to run, give option of continuing command
+            if ( ! $this->yesno("Would you like to contine with your command")) {
+                die;
+            }
+        }
+
+        if ($_SERVER['argc'] == 2) {
+            $this->process($_SERVER['argv'][1]);
+        } elseif ($_SERVER['argc'] == 3 && $_SERVER['argv'][1] == "help") {
+            $this->showHelp($_SERVER['argv'][2]);
+        } else {
+            $this->showHelp();
+        }
+    }
+
+    private function process($command)
+    {
+
     }
 
     private function loadConfig()
@@ -44,6 +92,109 @@ class TrelloMate
             return $module::getCommands();
         } else {
             return [];
+        }
+    }
+
+    private function checkSetup()
+    {
+        $setupRan = false;
+
+        $apikey = $this->config->getValue('trello.apikey');
+        $token = $this->config->getValue('trello.token');
+
+        if ($apikey === false || $token === false) {
+            $this->setup($apikey, $token);
+            $apikey = $this->config->getValue('trello.apikey');
+            $token = $this->config->getValue('trello.token');
+
+            $setupRan = true;
+        }
+
+        $passed = $this->testConnection($apikey, $token);
+        if ($passed === true) {
+            $this->debug("Setup validated");
+        } else {
+            $this->msg("Connection to Trello not valid", TrelloMate::MSG_ERR);
+            $this->msg($passed . "\n");
+
+            $this->config->setValue('trello.apikey', false);
+            $this->config->setValue('trello.token',  false);
+
+            $setupRan = $this->checkSetup();
+        }
+
+        return $setupRan;
+    }
+
+    private function setup($apikey, $token)
+    {
+        $this->msg('Trello setup not complete', TrelloMate::MSG_WARN);
+        $this->msg("You need to enter an API key and Token, which can be found at\nhttps://trello.com/app-key\n");
+        $apikey = $this->question('API key', $apikey);
+        $token = $this->question('Token', $token);
+
+        $this->config->setValue('trello.apikey', $apikey);
+        $this->config->setValue('trello.token',  $token);
+
+        $this->config->save();
+
+        $this->msg("\nSaved, testing connection...");
+    }
+
+    private function testConnection($apikey, $token) {
+        $client = new Client();
+        $client->authenticate($apikey, $token, Client::AUTH_URL_CLIENT_ID);
+
+        try {
+            $boards = $client->api('member')->boards()->all('me');
+            return true;
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
+    }
+
+    private function showHelp($command = null)
+    {
+
+    }
+
+    private function debug($msg)
+    {
+        if ($this->debug) {
+            $this->msg($msg, TrelloMate::MSG_DEBUG);
+        }
+    }
+
+    private function msg($msg, $type = TrelloMate::MSG_INFO) {
+        $output = '';
+
+        if ($type == TrelloMate::MSG_INFO) {
+            $output .= $this->outputColors['info'];
+        } elseif ($type == TrelloMate::MSG_WARN) {
+            $output .= $this->outputColors['warning'];
+        } elseif ($type == TrelloMate::MSG_ERR) {
+            $output .= $this->outputColors['error'];
+        } elseif ($type == TrelloMate::MSG_DEBUG) {
+            $output .= $this->outputColors['debug'];
+        }
+
+        $output .= $msg;
+
+        $output .= $this->outputColors['eol'];
+
+        \cli\line($output);
+    }
+
+    private function question($question, $default = false) {
+        return \cli\prompt($question, $default);
+    }
+
+    private function yesno($question, $default = 'y') {
+        $choice = \cli\choose($question, 'yn', $default);
+        if ($choice == 'y') {
+            return true;
+        } else {
+            return false;
         }
     }
 }
