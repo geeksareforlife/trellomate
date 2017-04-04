@@ -38,7 +38,7 @@ class Base extends Module
     {
         $version = $this->config->getValue('version');
 
-        $this->trello->msg('TrelloMate version ' . $version);
+        $this->trello->msg('TrelloMate version '.$version);
         $this->trello->msg('https://github.com/geeksareforlife/trellomate');
     }
 }
