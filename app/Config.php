@@ -22,7 +22,7 @@ class Config
         $this->configFile = $configFile;
 
         if ($default !== false) {
-        	$this->default = $default;
+            $this->default = $default;
         }
 
         if ($config !== false) {
@@ -34,11 +34,13 @@ class Config
         }
     }
 
-    public function save() {
+    public function save()
+    {
         $this->saveFile($this->config, $this->configFile);
     }
 
-    public function getValue($key) {
+    public function getValue($key)
+    {
         if (strpos($key, '.') !== false) {
             $keys = explode('.', $key);
         } else {
@@ -52,26 +54,27 @@ class Config
             if (isset($config[$key])) {
                 $config = $config[$key];
             } else {
-                $config = "";
+                $config = '';
             }
 
             if (isset($default[$key])) {
                 $default = $default[$key];
             } else {
-                $default = "";
+                $default = '';
             }
         }
 
-        if ($config !== "") {
+        if ($config !== '') {
             return $config;
-        } elseif ($default !== "") {
+        } elseif ($default !== '') {
             return $default;
         } else {
             return false;
         }
     }
 
-    public function setValue($key, $value) {
+    public function setValue($key, $value)
+    {
         if (strpos($key, '.') !== false) {
             $keys = explode('.', $key);
         } else {
@@ -119,6 +122,6 @@ class Config
     {
         $json = new JSON();
 
-        $json->encodeFile($content, $file, JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK );
+        $json->encodeFile($content, $file, JSON_PRETTY_PRINT | JSON_NUMERIC_CHECK);
     }
 }

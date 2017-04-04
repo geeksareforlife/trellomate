@@ -4,7 +4,6 @@ use GeeksAreForLife\TrelloMate\Module;
 
 class Base extends Module
 {
-
     private $trello;
     private $config;
 
