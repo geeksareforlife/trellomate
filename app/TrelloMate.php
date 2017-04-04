@@ -3,8 +3,8 @@
 namespace GeeksAreForLife\TrelloMate;
 
 use cli\Colors;
-use Trello\Client;
 use cli\Arguments;
+use Trello\Client;
 
 class TrelloMate
 {
@@ -43,7 +43,7 @@ class TrelloMate
         $this->outputColors['debug'] = Colors::color(['color' => 'white', 'style' => 'bright', 'background' => 'blue']);
 
         $arguments = new Arguments();
-        $arguments->addFlag(array('debug', 'd'), 'Turn on debug output');
+        $arguments->addFlag(['debug', 'd'], 'Turn on debug output');
 
         $arguments->parse();
 
@@ -119,17 +119,17 @@ class TrelloMate
 
     private function process($command)
     {
-        $this->debug("Processing " . $command);
+        $this->debug('Processing '.$command);
 
         $command = strtolower($command);
 
         // should we deal with this internally?
-        if ($command == "help") {
+        if ($command == 'help') {
             $this->showHelp();
         } else {
             // lookup module
             if (!isset($this->commands[$command])) {
-                $this->msg("Invalid command", self::MSG_ERR);
+                $this->msg('Invalid command', self::MSG_ERR);
             } else {
                 $module = new $this->commands[$command]['module']($this, $this->config);
                 $module->execute($command);
@@ -228,9 +228,9 @@ class TrelloMate
     private function showHelp($command = null)
     {
         if ($command) {
-            $this->debug("helping " . $command);
+            $this->debug('helping '.$command);
         } else {
-            $this->debug("general help");
+            $this->debug('general help');
         }
     }
 }
