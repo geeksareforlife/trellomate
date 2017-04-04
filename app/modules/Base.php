@@ -26,7 +26,19 @@ class Base extends Module
         return $commands;
     }
 
-    public function execute($command, $arguments)
+    public function execute($command)
     {
+        $this->trello->debug('executing');
+        if ($command == 'version') {
+            $this->showVersion();
+        }
+    }
+
+    private function showVersion()
+    {
+        $version = $this->config->getValue('version');
+
+        $this->trello->msg('TrelloMate version ' . $version);
+        $this->trello->msg('https://github.com/geeksareforlife/trellomate');
     }
 }

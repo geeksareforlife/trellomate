@@ -2,7 +2,9 @@
 
 namespace GeeksAreForLife\TrelloMate;
 
+use cli\Colors;
 use Trello\Client;
+use cli\Arguments;
 
 class TrelloMate
 {
@@ -28,7 +30,7 @@ class TrelloMate
         'info'      => '',
         'warning'   => '%Y',
         'error'     => '%R',
-        'debug'     => '%B',
+        'debug'     => '',
     ];
 
     const MSG_INFO = 0;
@@ -38,7 +40,16 @@ class TrelloMate
 
     public function __construct($debug = false)
     {
-        $this->debug = $debug;
+        $this->outputColors['debug'] = Colors::color(['color' => 'white', 'style' => 'bright', 'background' => 'blue']);
+
+        $arguments = new Arguments();
+        $arguments->addFlag(array('debug', 'd'), 'Turn on debug output');
+
+        $arguments->parse();
+
+        if ($arguments['debug']) {
+            $this->debug = $debug;
+        }
 
         $this->loadConfig();
         $this->loadModules();
@@ -52,17 +63,78 @@ class TrelloMate
             }
         }
 
-        if ($_SERVER['argc'] == 2) {
-            $this->process($_SERVER['argv'][1]);
-        } elseif ($_SERVER['argc'] == 3 && $_SERVER['argv'][1] == 'help') {
-            $this->showHelp($_SERVER['argv'][2]);
+        $commands = $arguments->getInvalidArguments();
+
+        if (count($commands) == 1) {
+            $this->process($commands[0]);
+        } elseif (count($commands) == 2 && $commands[0] == 'help') {
+            $this->showHelp($commands[1]);
         } else {
             $this->showHelp();
         }
     }
 
+    public function debug($msg)
+    {
+        if ($this->debug) {
+            $this->msg($msg, self::MSG_DEBUG);
+        }
+    }
+
+    public function msg($msg, $type = self::MSG_INFO)
+    {
+        $output = '';
+
+        if ($type == self::MSG_INFO) {
+            $output .= $this->outputColors['info'];
+        } elseif ($type == self::MSG_WARN) {
+            $output .= $this->outputColors['warning'];
+        } elseif ($type == self::MSG_ERR) {
+            $output .= $this->outputColors['error'];
+        } elseif ($type == self::MSG_DEBUG) {
+            $output .= $this->outputColors['debug'];
+        }
+
+        $output .= $msg;
+
+        $output .= $this->outputColors['eol'];
+
+        \cli\line($output);
+    }
+
+    public function question($question, $default = false)
+    {
+        return \cli\prompt($question, $default);
+    }
+
+    public function yesno($question, $default = 'y')
+    {
+        $choice = \cli\choose($question, 'yn', $default);
+        if ($choice == 'y') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private function process($command)
     {
+        $this->debug("Processing " . $command);
+
+        $command = strtolower($command);
+
+        // should we deal with this internally?
+        if ($command == "help") {
+            $this->showHelp();
+        } else {
+            // lookup module
+            if (!isset($this->commands[$command])) {
+                $this->msg("Invalid command", self::MSG_ERR);
+            } else {
+                $module = new $this->commands[$command]['module']($this, $this->config);
+                $module->execute($command);
+            }
+        }
     }
 
     private function loadConfig()
@@ -155,48 +227,10 @@ class TrelloMate
 
     private function showHelp($command = null)
     {
-    }
-
-    private function debug($msg)
-    {
-        if ($this->debug) {
-            $this->msg($msg, self::MSG_DEBUG);
-        }
-    }
-
-    private function msg($msg, $type = self::MSG_INFO)
-    {
-        $output = '';
-
-        if ($type == self::MSG_INFO) {
-            $output .= $this->outputColors['info'];
-        } elseif ($type == self::MSG_WARN) {
-            $output .= $this->outputColors['warning'];
-        } elseif ($type == self::MSG_ERR) {
-            $output .= $this->outputColors['error'];
-        } elseif ($type == self::MSG_DEBUG) {
-            $output .= $this->outputColors['debug'];
-        }
-
-        $output .= $msg;
-
-        $output .= $this->outputColors['eol'];
-
-        \cli\line($output);
-    }
-
-    private function question($question, $default = false)
-    {
-        return \cli\prompt($question, $default);
-    }
-
-    private function yesno($question, $default = 'y')
-    {
-        $choice = \cli\choose($question, 'yn', $default);
-        if ($choice == 'y') {
-            return true;
+        if ($command) {
+            $this->debug("helping " . $command);
         } else {
-            return false;
+            $this->debug("general help");
         }
     }
 }

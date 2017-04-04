@@ -8,5 +8,5 @@ abstract class Module
 
     abstract public function getCommands();
 
-    abstract public function execute($command, $arguments);
+    abstract public function execute($command);
 }
