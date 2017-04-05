@@ -2,9 +2,10 @@
 
 namespace GeeksAreForLife\TrelloMate;
 
+use cli\Table;
 use cli\Colors;
-use cli\Arguments;
 use Trello\Client;
+use cli\Arguments;
 
 class TrelloMate
 {
@@ -20,7 +21,7 @@ class TrelloMate
     private $commands = [
         'help'        => [
                 'short'        => 'Display the help for a command',
-                'long'         => "Displays the help for a command.\n\nUsage:\nphp trellomate help <command>",
+                'long'         => "Displays the help for a command.\n\n  Usage:\n  php trellomate [--debug] help <command>",
                 'module'       => '',
             ],
     ];
@@ -132,6 +133,7 @@ class TrelloMate
                 $this->msg('Invalid command', self::MSG_ERR);
             } else {
                 $module = new $this->commands[$command]['module']($this, $this->config);
+                $this->debug("Passing to module ".$this->commands[$command]['module']);
                 $module->execute($command);
             }
         }
@@ -227,10 +229,34 @@ class TrelloMate
 
     private function showHelp($command = null)
     {
+        $indent = '  ';
+
         if ($command) {
-            $this->debug('helping '.$command);
+            $this->debug('Help for '.$command);
+
+            $this->msg('Usage: php trellomate [--debug] '.$command);
+            $this->msg('');
+            $this->msg($this->commands[$command]['long']);
+
         } else {
-            $this->debug('general help');
+            $this->debug("General Help");
+
+            $this->msg('Usage: php trellomate [--debug] <command>');
+            $this->msg('');
+
+            $this->msg($indent.'COMMANDS');
+
+            // work out the longest command, so we can line it all up
+            $commands = [];
+            $maxLength = 0;
+            foreach ($this->commands as $command => $info) {
+                $maxLength = strlen($command) > $maxLength ? strlen($command) : $maxLength;
+                $commands[] = [$command, $info['short']];
+            }
+
+            foreach ($commands as $command) {
+                $this->msg($indent.str_pad($command[0], $maxLength).$indent.$indent.$command[1]);
+            }
         }
     }
 }
