@@ -5,11 +5,13 @@ use GeeksAreForLife\TrelloMate\Module;
 class Base extends Module
 {
     private $trello;
+    private $output;
     private $config;
 
-    public function __construct(&$trello, &$config)
+    public function __construct(&$trello, &$output, &$config)
     {
         $this->trello = $trello;
+        $this->output = $output;
         $this->config = $config;
     }
 
@@ -28,7 +30,7 @@ class Base extends Module
 
     public function execute($command)
     {
-        $this->trello->debug('executing');
+        $this->output->debug('executing');
         if ($command == 'version') {
             $this->showVersion();
         }
@@ -38,7 +40,7 @@ class Base extends Module
     {
         $version = $this->config->getValue('version');
 
-        $this->trello->msg('TrelloMate version '.$version);
-        $this->trello->msg('https://github.com/geeksareforlife/trellomate');
+        $this->output->msg('TrelloMate version '.$version);
+        $this->output->msg('https://github.com/geeksareforlife/trellomate');
     }
 }
