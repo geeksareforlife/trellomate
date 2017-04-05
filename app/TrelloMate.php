@@ -2,18 +2,19 @@
 
 namespace GeeksAreForLife\TrelloMate;
 
-use cli\Colors;
 use cli\Arguments;
 use Trello\Client;
 
 class TrelloMate
 {
-    private $debug = false;
-
     private $defaultConfig = __DIR__.'/defaultConfig.json';
     private $localConfig = __DIR__.'/config.json';
 
     private $config;
+
+    private $output;
+
+    private $client;
 
     private $moduleDir = __DIR__.'/modules';
 
@@ -25,40 +26,24 @@ class TrelloMate
             ],
     ];
 
-    private $outputColors = [
-        'eol'       => '%n',
-        'info'      => '',
-        'warning'   => '%Y',
-        'error'     => '%R',
-        'debug'     => '',
-    ];
-
-    const MSG_INFO = 0;
-    const MSG_WARN = 1;
-    const MSG_ERR = 2;
-    const MSG_DEBUG = 3;
-
-    public function __construct($debug = false)
+    public function __construct()
     {
-        $this->outputColors['debug'] = Colors::color(['color' => 'white', 'style' => 'bright', 'background' => 'blue']);
-
         $arguments = new Arguments();
         $arguments->addFlag(['debug', 'd'], 'Turn on debug output');
 
         $arguments->parse();
 
-        if ($arguments['debug']) {
-            $this->debug = $debug;
-        }
+        $debug = $arguments['debug'] ? true : false;
+        $this->output = new Output($debug);
 
         $this->loadConfig();
         $this->loadModules();
 
         // are we actually setup?
-        $this->debug('Checking Setup');
+        $this->output->debug('Checking Setup');
         if ($this->checkSetup()) {
             // setup had to run, give option of continuing command
-            if (!$this->yesno('Would you like to contine with your command')) {
+            if (!$this->output->yesno('Would you like to contine with your command')) {
                 die;
             }
         }
@@ -74,52 +59,9 @@ class TrelloMate
         }
     }
 
-    public function debug($msg)
-    {
-        if ($this->debug) {
-            $this->msg($msg, self::MSG_DEBUG);
-        }
-    }
-
-    public function msg($msg, $type = self::MSG_INFO)
-    {
-        $output = '';
-
-        if ($type == self::MSG_INFO) {
-            $output .= $this->outputColors['info'];
-        } elseif ($type == self::MSG_WARN) {
-            $output .= $this->outputColors['warning'];
-        } elseif ($type == self::MSG_ERR) {
-            $output .= $this->outputColors['error'];
-        } elseif ($type == self::MSG_DEBUG) {
-            $output .= $this->outputColors['debug'];
-        }
-
-        $output .= $msg;
-
-        $output .= $this->outputColors['eol'];
-
-        \cli\line($output);
-    }
-
-    public function question($question, $default = false)
-    {
-        return \cli\prompt($question, $default);
-    }
-
-    public function yesno($question, $default = 'y')
-    {
-        $choice = \cli\choose($question, 'yn', $default);
-        if ($choice == 'y') {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     private function process($command)
     {
-        $this->debug('Processing '.$command);
+        $this->output->debug('Processing '.$command);
 
         $command = strtolower($command);
 
@@ -129,10 +71,10 @@ class TrelloMate
         } else {
             // lookup module
             if (!isset($this->commands[$command])) {
-                $this->msg('Invalid command', self::MSG_ERR);
+                $this->output->msg('Invalid command', self::MSG_ERR);
             } else {
-                $module = new $this->commands[$command]['module']($this, $this->config);
-                $this->debug('Passing to module '.$this->commands[$command]['module']);
+                $module = new $this->commands[$command]['module']($this->client, $this->output, $this->config);
+                $this->output->debug('Passing to module '.$this->commands[$command]['module']);
                 $module->execute($command);
             }
         }
@@ -183,10 +125,10 @@ class TrelloMate
 
         $passed = $this->testConnection($apikey, $token);
         if ($passed === true) {
-            $this->debug('Setup validated');
+            $this->output->debug('Setup validated');
         } else {
-            $this->msg('Connection to Trello not valid', self::MSG_ERR);
-            $this->msg($passed."\n");
+            $this->output->msg('Connection to Trello not valid', self::MSG_ERR);
+            $this->output->msg($passed."\n");
 
             $this->config->setValue('trello.apikey', false);
             $this->config->setValue('trello.token', false);
@@ -199,26 +141,26 @@ class TrelloMate
 
     private function setup($apikey, $token)
     {
-        $this->msg('Trello setup not complete', self::MSG_WARN);
-        $this->msg("You need to enter an API key and Token, which can be found at\nhttps://trello.com/app-key\n");
-        $apikey = $this->question('API key', $apikey);
-        $token = $this->question('Token', $token);
+        $this->output->msg('Trello setup not complete', self::MSG_WARN);
+        $this->output->msg("You need to enter an API key and Token, which can be found at\nhttps://trello.com/app-key\n");
+        $apikey = $this->output->question('API key', $apikey);
+        $token = $this->output->question('Token', $token);
 
         $this->config->setValue('trello.apikey', $apikey);
         $this->config->setValue('trello.token', $token);
 
         $this->config->save();
 
-        $this->msg("\nSaved, testing connection...");
+        $this->output->msg("\nSaved, testing connection...");
     }
 
     private function testConnection($apikey, $token)
     {
-        $client = new Client();
-        $client->authenticate($apikey, $token, Client::AUTH_URL_CLIENT_ID);
+        $this->client = new Client();
+        $this->client->authenticate($apikey, $token, Client::AUTH_URL_CLIENT_ID);
 
         try {
-            $boards = $client->api('member')->boards()->all('me');
+            $boards = $this->client->api('member')->boards()->all('me');
 
             return true;
         } catch (\Exception $e) {
@@ -231,18 +173,18 @@ class TrelloMate
         $indent = '  ';
 
         if ($command) {
-            $this->debug('Help for '.$command);
+            $this->output->debug('Help for '.$command);
 
-            $this->msg('Usage: php trellomate [--debug] '.$command);
-            $this->msg('');
-            $this->msg($this->commands[$command]['long']);
+            $this->output->msg('Usage: php trellomate [--debug] '.$command);
+            $this->output->msg('');
+            $this->output->msg($this->commands[$command]['long']);
         } else {
-            $this->debug('General Help');
+            $this->output->debug('General Help');
 
-            $this->msg('Usage: php trellomate [--debug] <command>');
-            $this->msg('');
+            $this->output->msg('Usage: php trellomate [--debug] <command>');
+            $this->output->msg('');
 
-            $this->msg($indent.'COMMANDS');
+            $this->output->msg($indent.'COMMANDS');
 
             // work out the longest command, so we can line it all up
             $commands = [];
@@ -253,7 +195,7 @@ class TrelloMate
             }
 
             foreach ($commands as $command) {
-                $this->msg($indent.str_pad($command[0], $maxLength).$indent.$indent.$command[1]);
+                $this->output->msg($indent.str_pad($command[0], $maxLength).$indent.$indent.$command[1]);
             }
         }
     }
