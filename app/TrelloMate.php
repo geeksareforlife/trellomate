@@ -2,10 +2,9 @@
 
 namespace GeeksAreForLife\TrelloMate;
 
-use cli\Table;
 use cli\Colors;
-use Trello\Client;
 use cli\Arguments;
+use Trello\Client;
 
 class TrelloMate
 {
@@ -133,7 +132,7 @@ class TrelloMate
                 $this->msg('Invalid command', self::MSG_ERR);
             } else {
                 $module = new $this->commands[$command]['module']($this, $this->config);
-                $this->debug("Passing to module ".$this->commands[$command]['module']);
+                $this->debug('Passing to module '.$this->commands[$command]['module']);
                 $module->execute($command);
             }
         }
@@ -237,9 +236,8 @@ class TrelloMate
             $this->msg('Usage: php trellomate [--debug] '.$command);
             $this->msg('');
             $this->msg($this->commands[$command]['long']);
-
         } else {
-            $this->debug("General Help");
+            $this->debug('General Help');
 
             $this->msg('Usage: php trellomate [--debug] <command>');
             $this->msg('');
