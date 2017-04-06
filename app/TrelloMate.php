@@ -19,11 +19,13 @@ class TrelloMate
     private $moduleDir = __DIR__.'/modules';
 
     private $commands = [
-        'help'        => [
+        'internal'  => [
+            'help'        => [
                 'short'        => 'Display the help for a command',
                 'long'         => "Displays the help for a command.\n\n  Usage:\n  php trellomate [--debug] help <command>",
                 'module'       => '',
             ],
+        ],
     ];
 
     public function __construct()
@@ -63,18 +65,23 @@ class TrelloMate
     {
         $this->output->debug('Processing '.$command);
 
-        $command = strtolower($command);
+        if (strpos($command, ":")) {
+            list($namespace, $command) = explode(":", strtolower($command));
+        } else {
+            $namespace = 'internal';
+            $command = strtolower($command);
+        }
 
         // should we deal with this internally?
-        if ($command == 'help') {
+        if ($namespace == 'internal' && $command == 'help') {
             $this->showHelp();
         } else {
             // lookup module
-            if (!isset($this->commands[$command])) {
-                $this->output->msg('Invalid command', self::MSG_ERR);
+            if (!isset($this->commands[$namespace][$command])) {
+                $this->output->msg('Invalid command', Output::MSG_ERR);
             } else {
-                $module = new $this->commands[$command]['module']($this->client, $this->output, $this->config);
-                $this->output->debug('Passing to module '.$this->commands[$command]['module']);
+                $module = new $this->commands[$namespace][$command]['module']($this->client, $this->output, $this->config);
+                $this->output->debug('Passing to module '.$this->commands[$namespace][$command]['module']);
                 $module->execute($command);
             }
         }
@@ -127,7 +134,7 @@ class TrelloMate
         if ($passed === true) {
             $this->output->debug('Setup validated');
         } else {
-            $this->output->msg('Connection to Trello not valid', self::MSG_ERR);
+            $this->output->msg('Connection to Trello not valid', Output::MSG_ERR);
             $this->output->msg($passed."\n");
 
             $this->config->setValue('trello.apikey', false);
@@ -141,7 +148,7 @@ class TrelloMate
 
     private function setup($apikey, $token)
     {
-        $this->output->msg('Trello setup not complete', self::MSG_WARN);
+        $this->output->msg('Trello setup not complete', Output::MSG_WARN);
         $this->output->msg("You need to enter an API key and Token, which can be found at\nhttps://trello.com/app-key\n");
         $apikey = $this->output->question('API key', $apikey);
         $token = $this->output->question('Token', $token);
@@ -187,14 +194,17 @@ class TrelloMate
             $this->output->msg($indent.'COMMANDS');
 
             // work out the longest command, so we can line it all up
-            $commands = [];
+            $outputCommands = [];
             $maxLength = 0;
-            foreach ($this->commands as $command => $info) {
-                $maxLength = strlen($command) > $maxLength ? strlen($command) : $maxLength;
-                $commands[] = [$command, $info['short']];
+            foreach ($this->commands as $namespace => $commands) {
+                foreach ($commands as $command => $info) {
+                    $fullCommand = $namespace == 'internal' ? $command : $namespace.':'.$command;
+                    $maxLength = strlen($fullCommand) > $maxLength ? strlen($fullCommand) : $maxLength;
+                    $outputCommands[] = [$fullCommand, $info['short']];
+                }
             }
 
-            foreach ($commands as $command) {
+            foreach ($outputCommands as $command) {
                 $this->output->msg($indent.str_pad($command[0], $maxLength).$indent.$indent.$command[1]);
             }
         }

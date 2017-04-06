@@ -18,10 +18,12 @@ class Base extends Module
     public function getCommands()
     {
         $commands = [
-            'version'    => [
-                'short'        => 'Outputs the script version',
-                'long'         => 'Outputs the script version',
-                'module'       => 'Base',
+            'base' => [
+                'version'    => [
+                    'short'        => 'Outputs the script version',
+                    'long'         => 'Outputs the script version',
+                    'module'       => 'Base',
+                ],
             ],
         ];
 
