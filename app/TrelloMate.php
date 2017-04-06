@@ -65,7 +65,7 @@ class TrelloMate
     {
         $this->output->debug('Processing '.$command);
 
-        if (strpos($command, ":")) {
+        if (strpos($command, ':')) {
             list($namespace, $command) = explode(":", strtolower($command));
         } else {
             $namespace = 'internal';
