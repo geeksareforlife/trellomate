@@ -41,9 +41,16 @@ class Packing extends Module
     {
         $boardId = $this->trello->chooseBoard($this->output);
         $cards = $this->trello->getCards($boardId);
+
+        $this->output->msg('');
+        $progressBar = $this->output->progress('Removing from '.count($cards).' cards', count($cards));
+
         foreach ($cards as $card) {
             $this->trello->removeLabels($card);
+            $progressBar->tick();
         }
+
+        $progressBar->finish();
 
         $this->output->msg('All labels removed');
     }
