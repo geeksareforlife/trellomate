@@ -70,4 +70,16 @@ class Output
             return false;
         }
     }
+
+    public function selectFromList($list, $msg)
+    {
+        $choice = \cli\menu($list, null, $msg);
+
+        return $choice;
+    }
+
+    public function progress($msg, $total)
+    {
+        return $this->progressBar = new \cli\progress\Bar($msg, $total);
+    }
 }

@@ -3,7 +3,6 @@
 namespace GeeksAreForLife\TrelloMate;
 
 use cli\Arguments;
-use Trello\Client;
 
 class TrelloMate
 {
@@ -14,7 +13,7 @@ class TrelloMate
 
     private $output;
 
-    private $client;
+    private $trello;
 
     private $moduleDir = __DIR__.'/modules';
 
@@ -80,7 +79,7 @@ class TrelloMate
             if (!isset($this->commands[$namespace][$command])) {
                 $this->output->msg('Invalid command', Output::MSG_ERR);
             } else {
-                $module = new $this->commands[$namespace][$command]['module']($this->client, $this->output, $this->config);
+                $module = new $this->commands[$namespace][$command]['module']($this->trello, $this->output, $this->config);
                 $this->output->debug('Passing to module '.$this->commands[$namespace][$command]['module']);
                 $module->execute($command);
             }
@@ -130,7 +129,9 @@ class TrelloMate
             $setupRan = true;
         }
 
-        $passed = $this->testConnection($apikey, $token);
+        $this->trello = new Trello($apikey, $token);
+
+        $passed = $this->trello->testConnection();
         if ($passed === true) {
             $this->output->debug('Setup validated');
         } else {
@@ -159,20 +160,6 @@ class TrelloMate
         $this->config->save();
 
         $this->output->msg("\nSaved, testing connection...");
-    }
-
-    private function testConnection($apikey, $token)
-    {
-        $this->client = new Client();
-        $this->client->authenticate($apikey, $token, Client::AUTH_URL_CLIENT_ID);
-
-        try {
-            $boards = $this->client->api('member')->boards()->all('me');
-
-            return true;
-        } catch (\Exception $e) {
-            return $e->getMessage();
-        }
     }
 
     private function showHelp($command = null)
