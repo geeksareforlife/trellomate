@@ -40,6 +40,7 @@ class Trello
     public function getCards($boardId)
     {
         $cards = $this->client->boards()->cards()->all($boardId);
+
         return $cards;
     }
 

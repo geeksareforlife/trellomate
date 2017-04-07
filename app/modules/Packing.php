@@ -32,7 +32,7 @@ class Packing extends Module
 
     public function execute($command)
     {
-        if ($command == "reset") {
+        if ($command == 'reset') {
             $this->resetPackingBoard();
         }
     }
