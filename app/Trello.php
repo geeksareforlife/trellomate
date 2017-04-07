@@ -3,6 +3,7 @@
 namespace GeeksAreForLife\TrelloMate;
 
 use Trello\Client;
+use GeeksAreForLife\TrelloMate\Shims\IdLabels;
 
 class Trello
 {
@@ -25,4 +26,28 @@ class Trello
         }
     }
 
+    public function chooseBoard(&$output)
+    {
+        $boards = $this->client->members()->boards()->all('me');
+        $boardList = [];
+        foreach ($boards as $board) {
+            $boardList[$board['id']] = $board['name'];
+        }
+
+        return $output->selectFromList($boardList, 'Choose a board to reset');
+    }
+
+    public function getCards($boardId)
+    {
+        $cards = $this->client->boards()->cards()->all($boardId);
+        return $cards;
+    }
+
+    public function removeLabels($card)
+    {
+        $idLabels = new IdLabels($this->client);
+        foreach ($card['idLabels'] as $labelId) {
+            $idLabels->remove($card['id'], $labelId);
+        }
+    }
 }

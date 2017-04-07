@@ -70,4 +70,10 @@ class Output
             return false;
         }
     }
+
+    public function selectFromList($list, $msg) {
+        $choice = \cli\menu($list, null, $msg);
+
+        return $choice;
+    }
 }
