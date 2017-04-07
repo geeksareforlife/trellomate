@@ -39,7 +39,7 @@ class Packing extends Module
 
     private function resetPackingBoard()
     {
-        $boardId = $this->trello->chooseBoard($this->output);
+        $boardId = $this->trello->chooseBoard('Choose a board to reset', $this->output);
         $cards = $this->trello->getCards($boardId);
 
         $this->output->msg('');

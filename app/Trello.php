@@ -26,7 +26,7 @@ class Trello
         }
     }
 
-    public function chooseBoard(&$output)
+    public function chooseBoard($msg, &$output)
     {
         $boards = $this->client->members()->boards()->all('me');
         $boardList = [];
@@ -34,7 +34,7 @@ class Trello
             $boardList[$board['id']] = $board['name'];
         }
 
-        return $output->selectFromList($boardList, 'Choose a board to reset');
+        return $output->selectFromList($boardList, $msg);
     }
 
     public function getCards($boardId)
