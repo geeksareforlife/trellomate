@@ -3,7 +3,6 @@
 namespace GeeksAreForLife\TrelloMate;
 
 use cli\Arguments;
-use Trello\Client;
 
 class TrelloMate
 {
