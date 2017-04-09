@@ -9,6 +9,8 @@ class Trello
 {
     private $client;
 
+    private $cache = [];
+
     public function __construct($apikey, $token)
     {
         $this->client = new Client();
@@ -26,11 +28,13 @@ class Trello
         }
     }
 
-    public function chooseBoard($msg, &$output)
+    public function chooseBoard($msg, &$output, $useCache = true)
     {
-        $boards = $this->client->members()->boards()->all('me');
+        if (!$useCache || !isset($this->cache['boards'])) {
+            $this->cache['boards'] = $this->client->members()->boards()->all('me');
+        }
         $boardList = [];
-        foreach ($boards as $board) {
+        foreach ($this->cache['boards'] as $board) {
             $boardList[$board['id']] = $board['name'];
         }
 
