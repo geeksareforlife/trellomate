@@ -138,6 +138,11 @@ class Trello
                 'keepFromSource'    =>  'attachments,checklists,comments,due,members,stickers',
                 'idList'            =>  $listId
             ];
+
+            if (isset($card['desc'])) {
+                $newCard['desc'] = $card['desc'];
+            }
+
             $this->client->cards()->create($newCard);
         }
     }

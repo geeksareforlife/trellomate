@@ -32,6 +32,11 @@ class ScrumLite extends Module
                     'long'      => 'Moves items from Product Backlog to Release Backlog based on labels',
                     'module'    => 'ScrumLite',
                 ],
+                'sprint' => [
+                    'short'     => 'Prepares Sprint',
+                    'long'      => 'Moves items from Release Backlog to Sprint based on labels',
+                    'module'    => 'ScrumLite',
+                ],
             ],
         ];
 
@@ -44,6 +49,8 @@ class ScrumLite extends Module
             $this->setupNewProject();
         } elseif ($command == 'release') {
             $this->prepareRelease();
+        } elseif ($command == 'sprint') {
+            $this->prepareSprint();
         }
     }
 
@@ -91,9 +98,9 @@ class ScrumLite extends Module
         // config = [
         //   product     => boardID,
         //   release     => boardID,
-        //   releaseList => listID,
+        //   releaselist => listID,
         //   sprint      => boardID,
-        //   sprintList  => listID
+        //   sprintlist  => listID
         // ]
         $projectConfig = $projects[$project];
 
@@ -107,14 +114,55 @@ class ScrumLite extends Module
             }
         }
 
+        $this->moveCards($projectConfig['product'], $projectConfig['releaselist'], $labelId);
+    }
+
+    public function prepareSprint()
+    {
+        // What project are we working on?
+        $projects = $this->config->getValue('projects', $this->moduleName);
+
+        $projectList = [];
+        foreach ($projects as $key => $boards) {
+            $projectList[$key] = $this->keyToName($key);
+        }
+
+        $project = $this->output->selectFromList($projectList, 'Which project?');
+
+        // get the config for that project
+        // we should have:
+        // config = [
+        //   product     => boardID,
+        //   release     => boardID,
+        //   releaselist => listID,
+        //   sprint      => boardID,
+        //   sprintlist  => listID
+        // ]
+        $projectConfig = $projects[$project];
+
+        // What label are we going to look for?
+        $labels = $this->trello->getLabels($projectConfig['release']);
+        $labelId = '';
+        foreach ($labels as $label) {
+            if ($label['name'] == 'Sprint') {
+                $labelId = $label['id'];
+                break;
+            }
+        }
+
+        $this->moveCards($projectConfig['release'], $projectConfig['sprintlist'], $labelId);
+    }
+
+    private function moveCards($fromBoard, $toList, $byLabelId)
+    {
         // Find all the cards with our label, sort and sanitise
-        $cards = $this->trello->getCardsByListWithLabel($projectConfig['product'], $labelId);
+        $cards = $this->trello->getCardsByListWithLabel($fromBoard, $byLabelId);
         $cards = $this->orderCardsIntoOneList($cards);
-        //$cards = $this->trello->getCheckListsforCards($cards);
-        $cards = Arrays::sanitiseArrayList($cards, ['id', 'name']);//, 'desc', 'checklists']);
+        $cards = Arrays::sanitiseArrayList($cards, ['id', 'name', 'desc']);
 
         // Create the cards in the "incoming" list of the release board
-        $this->trello->copyCardsToList($cards, $projectConfig['releaselist']);
+        // TODO - need to take the NEW description
+        $this->trello->copyCardsToList($cards, $toList);
 
         // archive the old cards
         $this->trello->archiveCards($cards);
@@ -154,7 +202,7 @@ class ScrumLite extends Module
                     $card = $cardsByList[$area][$i];
 
                     if ($addArea) {
-                        $card['desc'] = '**Product Area:** ' . $area . "\n\n" . $card['desc'];
+                        $card['desc'] = 'Product Area: **' . $area . "**\n\n" . $card['desc'];
                     }
 
                     $cards[] = $card;
