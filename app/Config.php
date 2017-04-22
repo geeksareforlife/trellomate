@@ -39,13 +39,9 @@ class Config
         $this->saveFile($this->config, $this->configFile);
     }
 
-    public function getValue($key)
+    public function getValue($key, $module = false)
     {
-        if (strpos($key, '.') !== false) {
-            $keys = explode('.', $key);
-        } else {
-            $keys = [$key];
-        }
+        $keys = $this->getKeys($key, $module);
 
         $config = $this->config;
         $default = $this->default;
@@ -73,13 +69,9 @@ class Config
         }
     }
 
-    public function setValue($key, $value)
+    public function setValue($key, $value, $module = false)
     {
-        if (strpos($key, '.') !== false) {
-            $keys = explode('.', $key);
-        } else {
-            $keys = [$key];
-        }
+        $keys = $this->getKeys($key, $module);
 
         $config = &$this->config;
         foreach ($keys as $key) {
@@ -94,6 +86,21 @@ class Config
         } else {
             $config[] = $value;
         }
+    }
+
+    private function getKeys($key, $module)
+    {
+        if ($module) {
+            $key = 'modules.'.strtolower($module).'.'.$key;
+        }
+
+        if (strpos($key, '.') !== false) {
+            $keys = explode('.', $key);
+        } else {
+            $keys = [$key];
+        }
+
+        return $keys;
     }
 
     private function readConfig($file)

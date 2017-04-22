@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "362e2bb81a12f366413d7a47def43bb7",
-    "content-hash": "065f28b120f4ed914750d7d294675429",
+    "hash": "1e06f89cefcf44c261e4c053ec10c6d1",
+    "content-hash": "d8ad324a44b5b1bb43b51a51fc9f5be9",
     "packages": [
         {
             "name": "cdaguerre/php-trello-api",
@@ -53,6 +53,43 @@
                 "trello"
             ],
             "time": "2015-06-16 14:25:56"
+        },
+        {
+            "name": "geeksareforlife/utilities",
+            "version": "0.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/geeksareforlife/utilities.git",
+                "reference": "eeb9168c618e63b1316bda9b4387b55ca8418f8b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/geeksareforlife/utilities/zipball/eeb9168c618e63b1316bda9b4387b55ca8418f8b",
+                "reference": "eeb9168c618e63b1316bda9b4387b55ca8418f8b",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^5.3.3 || ^7.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GeeksAreForLife\\Utilities\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "James Hayward",
+                    "email": "jhayward1980@gmail.com"
+                }
+            ],
+            "description": "Various general purpose utilities",
+            "homepage": "https://github.com/geeksareforlife/utilities",
+            "time": "2017-04-16 20:53:35"
         },
         {
             "name": "guzzle/guzzle",
