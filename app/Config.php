@@ -88,9 +88,10 @@ class Config
         }
     }
 
-    private function getKeys($key, $module) {
+    private function getKeys($key, $module)
+    {
         if ($module) {
-            $key = 'modules.' . strtolower($module) . '.' . $key;
+            $key = 'modules.'.strtolower($module).'.'.$key;
         }
 
         if (strpos($key, '.') !== false) {
