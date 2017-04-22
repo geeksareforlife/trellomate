@@ -202,7 +202,7 @@ class ScrumLite extends Module
                     $card = $cardsByList[$area][$i];
 
                     if ($addArea) {
-                        $card['desc'] = 'Product Area: **' . $area . "**\n\n" . $card['desc'];
+                        $card['desc'] = 'Product Area: **'.$area."**\n\n".$card['desc'];
                     }
 
                     $cards[] = $card;

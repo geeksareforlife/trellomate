@@ -133,10 +133,10 @@ class Trello
                 continue;
             }
             $newCard = [
-                'name'              =>  $card['name'],
-                'idCardSource'      =>  $card['id'],
-                'keepFromSource'    =>  'attachments,checklists,comments,due,members,stickers',
-                'idList'            =>  $listId
+                'name'              => $card['name'],
+                'idCardSource'      => $card['id'],
+                'keepFromSource'    => 'attachments,checklists,comments,due,members,stickers',
+                'idList'            => $listId,
             ];
 
             if (isset($card['desc'])) {
@@ -147,13 +147,14 @@ class Trello
         }
     }
 
-    public function archiveCards($cards) {
+    public function archiveCards($cards)
+    {
         foreach ($cards as $card) {
             if (!isset($card['id'])) {
                 continue;
             }
             $params = [
-                'closed'    =>  'true'
+                'closed'    => 'true',
             ];
             $this->client->cards()->update($card['id'], $params);
         }
