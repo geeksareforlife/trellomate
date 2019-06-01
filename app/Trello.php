@@ -31,7 +31,7 @@ class Trello
     public function chooseBoard($msg, &$output, $useCache = true)
     {
         if (!$useCache || !isset($this->cache['boards'])) {
-            $this->cache['boards'] = $this->client->members()->boards()->all('me');
+            $this->cache['boards'] = $this->getBoards(true);
         }
         $boardList = [];
         foreach ($this->cache['boards'] as $board) {
@@ -52,6 +52,25 @@ class Trello
         }
 
         return $output->selectFromList($lists, $msg);
+    }
+
+    public function getBoards($openOnly = true)
+    {
+        $allBoards = $this->client->members()->boards()->all('me');
+
+        $boards = [];
+
+        if ($openOnly) {
+            foreach ($allBoards as $board) {
+                if ($board['closed'] !== true) {
+                    $boards[] = $board;
+                }
+            }
+        } else {
+            $boards = $allBoards;
+        }
+
+        return $boards;
     }
 
     public function getCards($boardId)
